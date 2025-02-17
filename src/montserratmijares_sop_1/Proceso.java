@@ -3,6 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package montserratmijares_sop_1;
+import java.util.concurrent.Semaphore;
 
 /**
  *
@@ -17,6 +18,8 @@ public class Proceso extends Thread {
     private int ciclosCompletarExcepcion;
     private String estado;
     private int ciclosEjecutados;
+    private int tiempoEspera; 
+    private Semaphore semaforoExcepcion;
     
     public Proceso(int id, String nombre, int instrucciones, boolean cpuBound, int ciclosExcepcion, int ciclosCompletarExcepcion){
         
@@ -28,6 +31,7 @@ public class Proceso extends Thread {
         this.ciclosCompletarExcepcion = ciclosCompletarExcepcion;
         this.estado = "Ready";
         this.ciclosEjecutados = 0;
+        this.semaforoExcepcion = new Semaphore(1);
     }
     
     
@@ -40,33 +44,38 @@ public class Proceso extends Thread {
                 ciclosEjecutados ++;
                 
                 if(!cpuBound && ciclosExcepcion > 0 && ciclosEjecutados % ciclosExcepcion == 0){
-                    estado = "Bloqueado";
-                    System.out.println(nombre + " genero una excepcion de E/S");
-                    try{
-                        Thread.sleep(ciclosCompletarExcepcion * 100);
-                    }catch(InterruptedException e){
+                     try {
+                        semaforoExcepcion.acquire(); 
+                        estado = "Blocked";
+                        System.out.println(nombre + " generó una excepción de E/S.");
+                        Thread.sleep(ciclosCompletarExcepcion * 100); 
+                        estado = "Ready";
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
+                    } finally {
+                        semaforoExcepcion.release(); 
                     }
-                    estado = "Ready";
                 }
-                
-                try{
-                    Thread.sleep(100);
-                }catch(InterruptedException e){
+
+                try {
+                    Thread.sleep(100); 
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-            }else{
-                try{
+            } else {
+               
+                try {
                     Thread.sleep(10);
-                }catch(InterruptedException e){
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-            
             }
         }
-        estado = "Terminated";
-        System.out.println(nombre + " ha terminado");
+         estado = "Terminated";
+        System.out.println(nombre + " ha terminado.");
     }
+    
+     
     
     public int getProcesoId() {return id;}
     public String getNombre(){return nombre;}
@@ -75,8 +84,14 @@ public class Proceso extends Thread {
     public int getCiclosExcepcion(){return ciclosExcepcion;}
     public int getCiclosCompletarExcepcion(){return ciclosCompletarExcepcion;}
     public String getEstado(){return estado;}
-    public void setEstado(String estado){this.estado = estado;}
+      
     public int getCiclosEjecutados(){return ciclosEjecutados;}
-    
+    public void setEstado(String estado){this.estado = estado;}
+    public void setInstrucciones(int instrucciones) { this.instrucciones = instrucciones; }
+    public void setCpuBound(boolean cpuBound) { this.cpuBound = cpuBound; }
+    public void setCiclosExcepcion(int ciclosExcepcion) { this.ciclosExcepcion = ciclosExcepcion; }
+    public void setCiclosCompletarExcepcion(int ciclosCompletarExcepcion) { this.ciclosCompletarExcepcion = ciclosCompletarExcepcion; }
+    public void setCiclosEjecutados(int ciclosEjecutados) { this.ciclosEjecutados = ciclosEjecutados; }
+  
     
 }

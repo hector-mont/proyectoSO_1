@@ -3,6 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package montserratmijares_sop_1;
+import java.util.concurrent.Semaphore;
 
 /**
  *
@@ -12,32 +13,55 @@ public class Planificador {
     private Cola cola;
     private int tiempoMaxEjecucion;
     private String politica;
+     private Semaphore semaforo;
     
     public Planificador(int tiempoMaxEjecucion, String politica, int capacidadCola ){
         this.cola = new Cola(capacidadCola);
         this.tiempoMaxEjecucion = tiempoMaxEjecucion;
         this.politica = politica;
+        this.semaforo = new Semaphore(1);
+       
     }
     
-    public void agregarProceso(Proceso proceso){
-        cola.agregar(proceso);
-    }
-    
-    public Proceso siguienteProceso(){
-       switch (politica) {
-            case "FCFS":
-                return siguienteProcesoFCFS();
-            case "RoundRobin":
-                return siguienteProcesoRoundRobin();
-            case "SPM":
-                return siguienteProcesoSPM();
-            case "SRT":
-                return siguienteProcesoSRT();
-            case "HRDN":
-                return siguienteProcesoHRDN();
-            default:
-                throw new IllegalArgumentException("Política no soportada: " + politica);
+      public void agregarProceso(Proceso proceso) {
+        try {
+            semaforo.acquire();
+            cola.agregar(proceso);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            semaforo.release(); 
         }
+    }
+public Proceso siguienteProceso() {
+        Proceso proceso = null;
+        try {
+            semaforo.acquire(); 
+            switch (politica) {
+                case "FCFS":
+                    proceso = siguienteProcesoFCFS();
+                    break;
+                case "RoundRobin":
+                    proceso = siguienteProcesoRoundRobin();
+                    break;
+                case "SPM":
+                    proceso = siguienteProcesoSPM();
+                    break;
+                case "SRT":
+                    proceso = siguienteProcesoSRT();
+                    break;
+                case "HRDN":
+                    proceso = siguienteProcesoHRDN();
+                    break;
+                default:
+                    throw new IllegalArgumentException("Política no soportada: " + politica);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            semaforo.release(); 
+        }
+        return proceso;
     }
     
   public boolean debeCambiarProceso(Proceso procesoActual) {
@@ -54,6 +78,17 @@ public class Planificador {
   private Proceso siguienteProcesoFCFS() {
         return cola.poll(); 
     }
-
-
+  
+  private Proceso siguienteProcesoRoundRobin(){
+      Proceso proceso = cola.poll();
+      if(proceso != null && proceso.getInstrucciones() > tiempoMaxEjecucion){
+          proceso.setInstrucciones(proceso.getInstrucciones() - tiempoMaxEjecucion);
+          cola.agregar(proceso);
+      }
+      return proceso;
+  }
+  
 }
+
+
+
