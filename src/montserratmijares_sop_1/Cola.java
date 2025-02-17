@@ -49,6 +49,33 @@ public class Cola {
         return procesos[principio];
     }
     
+    public void remove(Proceso proceso) {
+    if (size == 0) {
+        throw new IllegalStateException("La cola está vacía");
+    }
+    
+    int index = -1;
+    for (int i = 0; i < size; i++) {
+        int actual = (principio + i) % capacidad;
+        if (procesos[actual] == proceso) {
+            index = actual;
+            break;
+        }
+    }
+    
+    if (index == -1) {
+        throw new IllegalArgumentException("El proceso no está en la cola");
+    }
+    for (int i = index; i != fin; i = (i + 1) % capacidad) {
+        int next = (i + 1) % capacidad;
+        procesos[i] = procesos[next];
+    }
+
+    procesos[fin] = null; 
+    fin = (fin - 1 + capacidad) % capacidad;
+    size--;
+    }
+    
     public boolean Vacia(){
         return size == 0;
     }
