@@ -35,52 +35,56 @@ public class Proceso extends Thread {
     }
     
     
-    @Override
+     @Override
     public void run(){
-        while(instrucciones > 0 ){
-            if (estado.equals("Running")){
-                System.out.println(nombre + " ejecutando instruccion. Instrucciones restantes: " + instrucciones);
-                instrucciones --;
-                ciclosEjecutados ++;
-                
-                if(!cpuBound && ciclosExcepcion > 0 && ciclosEjecutados % ciclosExcepcion == 0){
-                     try {
+        while (instrucciones > 0) {
+            if (estado.equals("Running")) {
+                System.out.println(nombre + " ejecutando instrucción. Instrucciones restantes: " + instrucciones);
+                instrucciones--;
+                ciclosEjecutados++;
+
+                // Simulación de excepción de E/S
+                if (!cpuBound && ciclosExcepcion > 0 && ciclosEjecutados % ciclosExcepcion == 0) {
+                    try {
                         semaforoExcepcion.acquire(); 
                         estado = "Blocked";
                         System.out.println(nombre + " generó una excepción de E/S.");
-                        Thread.sleep(ciclosCompletarExcepcion * 100); 
+                        Thread.sleep(ciclosCompletarExcepcion * 100);
                         estado = "Ready";
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        Thread.currentThread().interrupt();
+                        System.err.println("Proceso interrumpido: " + e.getMessage());
                     } finally {
                         semaforoExcepcion.release(); 
                     }
                 }
 
                 try {
-                    Thread.sleep(100); 
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Thread.currentThread().interrupt();
+                    System.err.println("Proceso interrumpido: " + e.getMessage());
                 }
             } else {
-               
                 try {
                     Thread.sleep(10);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Thread.currentThread().interrupt();
+                    System.err.println("Proceso interrumpido: " + e.getMessage());
                 }
             }
         }
-         estado = "Terminated";
+        estado = "Terminated";
         System.out.println(nombre + " ha terminado.");
     }
+
     
      
     
     public int getProcesoId() {return id;}
     public String getNombre(){return nombre;}
     public int getInstrucciones(){return instrucciones;}
-    public boolean cpuBoound(){return cpuBound;}
+    public boolean cpuBound(){return cpuBound;}
     public int getCiclosExcepcion(){return ciclosExcepcion;}
     public int getCiclosCompletarExcepcion(){return ciclosCompletarExcepcion;}
     public String getEstado(){return estado;}
