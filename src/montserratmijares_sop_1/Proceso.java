@@ -43,7 +43,7 @@ public class Proceso extends Thread {
                 instrucciones--;
                 ciclosEjecutados++;
 
-                // Simulación de excepción de E/S
+               
                 if (!cpuBound && ciclosExcepcion > 0 && ciclosEjecutados % ciclosExcepcion == 0) {
                     try {
                         semaforoExcepcion.acquire(); 
