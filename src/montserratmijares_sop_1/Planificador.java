@@ -44,8 +44,8 @@ public Proceso siguienteProceso() {
                 case "RoundRobin":
                     proceso = siguienteProcesoRoundRobin();
                     break;
-                case "SPM":
-                    proceso = siguienteProcesoSPM();
+                case "SPN":
+                    proceso = siguienteProcesoSPN();
                     break;
                 case "SRT":
                     proceso = siguienteProcesoSRT();
@@ -88,6 +88,40 @@ public Proceso siguienteProceso() {
       return proceso;
   }
   
+   private Proceso siguienteProcesoSPN() {
+        Proceso procesoMenorInstrucciones = null;
+       
+        for (int i = 0; i < cola.cantidad(); i++) {
+            Proceso proceso = cola.poll();
+            if (procesoMenorInstrucciones == null || proceso.getInstrucciones() < procesoMenorInstrucciones.getInstrucciones()) {
+                if (procesoMenorInstrucciones != null) {
+                    cola.agregar(procesoMenorInstrucciones);
+                }
+                procesoMenorInstrucciones = proceso;
+            } else {
+                cola.agregar(proceso);
+            }
+        }
+        return procesoMenorInstrucciones;
+    }
+
+    private Proceso siguienteProcesoSRT() {
+        Proceso procesoMenorInstruccionesRestantes = null;
+        for (int i = 0; i < cola.cantidad(); i++) {
+            Proceso proceso = cola.poll();
+            if (procesoMenorInstruccionesRestantes == null || proceso.getInstrucciones() < procesoMenorInstruccionesRestantes.getInstrucciones()) {
+                if (procesoMenorInstruccionesRestantes != null) {
+                    cola.agregar(procesoMenorInstruccionesRestantes);
+                }
+                procesoMenorInstruccionesRestantes = proceso;
+            } else {
+                cola.agregar(proceso);
+            }
+        }
+        return procesoMenorInstruccionesRestantes;
+    }
+
+    
 }
 
 
