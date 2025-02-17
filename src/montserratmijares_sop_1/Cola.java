@@ -23,7 +23,7 @@ public class Cola {
         this.size = 0;
     }
     
-    public void agrefar(Proceso proceso){
+    public void agregar(Proceso proceso){
         if(size == capacidad){
             throw new IllegalStateException("La cola esta llena");
         }
