@@ -11,6 +11,7 @@ import java.util.concurrent.Semaphore;
  */
 public class Planificador {
     private Cola cola;
+    private Cola colaBloqueados;    
     private int tiempoMaxEjecucion;
     private String politica;
      private Semaphore semaforo;
@@ -33,7 +34,33 @@ public class Planificador {
             semaforo.release(); 
         }
     }
-public Proceso siguienteProceso() {
+      
+      public void moverABloqueados(Proceso proceso) {
+        try {
+            semaforo.acquire();
+            colaBloqueados.agregar(proceso);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            semaforo.release();
+        }
+    }
+      
+      public void verificarBloqueados() {
+    try {
+        semaforo.acquire();
+        Proceso proceso = colaBloqueados.poll();
+        if (proceso != null && proceso.getEstado().equals("Ready")) {
+            cola.agregar(proceso);
+        }
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    } finally {
+        semaforo.release();
+    }
+}
+      
+    public Proceso siguienteProceso() {
         Proceso proceso = null;
         try {
             semaforo.acquire(); 
@@ -51,7 +78,7 @@ public Proceso siguienteProceso() {
                     proceso = siguienteProcesoSRT();
                     break;
                 case "HRDN":
-                    proceso = siguienteProcesoHRDN();
+                    proceso = siguienteProcesoHRRN();
                     break;
                 default:
                     throw new IllegalArgumentException("Política no soportada: " + politica);
@@ -120,9 +147,27 @@ public Proceso siguienteProceso() {
         }
         return procesoMenorInstruccionesRestantes;
     }
+    private Proceso siguienteProcesoHRRN() {
+    Proceso procesoMayorResponseRatio = null;
+    for (int i = 0; i < cola.cantidad(); i++) {
+        Proceso proceso = cola.poll();
+        int tiempoEspera = proceso.getTiempoEspera();
+        int tiempoEjecucion = proceso.getInstrucciones();
+        double responseRatio = (tiempoEspera + tiempoEjecucion) / (double) tiempoEjecucion;
 
-    
+        if (procesoMayorResponseRatio == null || responseRatio > (procesoMayorResponseRatio.getTiempoEspera() + procesoMayorResponseRatio.getInstrucciones()) / (double) procesoMayorResponseRatio.getInstrucciones()) {
+            if (procesoMayorResponseRatio != null) {
+                cola.agregar(procesoMayorResponseRatio);
+            }
+            procesoMayorResponseRatio = proceso;
+        } else {
+            cola.agregar(proceso);
+        }
+    }
+    return procesoMayorResponseRatio;
 }
+}
+    
 
 
 
