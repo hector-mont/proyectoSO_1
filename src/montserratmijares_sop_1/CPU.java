@@ -39,7 +39,7 @@ public class CPU implements Runnable{
             }
 
             try {
-                Thread.sleep(100); // Simular un ciclo de reloj
+                Thread.sleep(1000); // Simular un ciclo de reloj
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
