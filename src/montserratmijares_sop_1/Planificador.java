@@ -51,9 +51,11 @@ public class Planificador {
     public void verificarBloqueados() {
         try {
             semaforo.acquire();
-            Proceso proceso = colaBloqueados.poll();
-            if (proceso != null && proceso.getEstado().equals("Ready")) {
-                cola.agregar(proceso);
+            if (!colaBloqueados.Vacia()) { // Verificar si la cola de bloqueados no está vacía
+                Proceso proceso = colaBloqueados.poll();
+                if (proceso != null && proceso.getEstado().equals("Ready")) {
+                    cola.agregar(proceso);
+                }
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
