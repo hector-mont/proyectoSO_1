@@ -1,15 +1,7 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package montserratmijares_sop_1;
 
 import java.util.concurrent.Semaphore;
 
-/**
- *
- * @author Etol
- */
 public class Planificador {
 
     public Cola cola;
@@ -17,19 +9,27 @@ public class Planificador {
     public int tiempoMaxEjecucion;
     public String politica;
     public Semaphore semaforo;
+    public Metricas metricas;
 
     public Planificador(int tiempoMaxEjecucion, String politica, int capacidadCola) {
         this.cola = new Cola(capacidadCola);
-        this.colaBloqueados = new Cola(capacidadCola); // Inicializar la cola de bloqueados
+        this.colaBloqueados = new Cola(capacidadCola);
         this.tiempoMaxEjecucion = tiempoMaxEjecucion;
         this.politica = politica;
         this.semaforo = new Semaphore(1);
+        this.metricas = new Metricas();
+        System.out.println("Planificador creado con política: " + politica);
+    }
+    
+    public Metricas getMetricas() {
+        return metricas;
     }
 
     public void agregarProceso(Proceso proceso) {
         try {
             semaforo.acquire();
             cola.agregar(proceso);
+            System.out.println("Proceso " + proceso.getNombre() + " agregado a la cola de listos.");
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
@@ -41,6 +41,7 @@ public class Planificador {
         try {
             semaforo.acquire();
             colaBloqueados.agregar(proceso);
+            System.out.println("Proceso " + proceso.getNombre() + " movido a la cola de bloqueados.");
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
@@ -51,10 +52,11 @@ public class Planificador {
     public void verificarBloqueados() {
         try {
             semaforo.acquire();
-            if (!colaBloqueados.Vacia()) { // Verificar si la cola de bloqueados no está vacía
+            if (!colaBloqueados.estaVacia()) {
                 Proceso proceso = colaBloqueados.poll();
                 if (proceso != null && proceso.getEstado().equals("Ready")) {
                     cola.agregar(proceso);
+                    System.out.println("Proceso " + proceso.getNombre() + " ha sido movido a la cola de listos.");
                 }
             }
         } catch (InterruptedException e) {
@@ -95,6 +97,7 @@ public class Planificador {
             // Establecer el estado del proceso a "Running" antes de devolverlo
             if (proceso != null) {
                 proceso.setEstado("Running");
+                System.out.println("Proceso " + proceso.getNombre() + " seleccionado para ejecución con política " + politica);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -105,33 +108,45 @@ public class Planificador {
     }
 
     public boolean debeCambiarProceso(Proceso procesoActual) {
+        boolean cambiar = false;
         switch (politica) {
             case "RoundRobin":
-                return procesoActual.getCiclosEjecutados() >= tiempoMaxEjecucion;
+                cambiar = procesoActual.getCiclosEjecutados() >= tiempoMaxEjecucion;
+                break;
             case "SRT":
-                return !cola.Vacia() && cola.peek().getInstrucciones() < procesoActual.getInstrucciones();
+                cambiar = !cola.estaVacia() && cola.peek().getInstrucciones() < procesoActual.getInstrucciones();
+                break;
             default:
-                return false;
+                cambiar = false;
         }
+        if (cambiar) {
+            System.out.println("Cambiando de proceso según política " + politica);
+        }
+        return cambiar;
     }
 
     private Proceso siguienteProcesoFCFS() {
-        return cola.poll();
-    }
-
-    private Proceso siguienteProcesoRoundRobin() {
         Proceso proceso = cola.poll();
-        if (proceso != null && proceso.getInstrucciones() > tiempoMaxEjecucion) {
-            proceso.setInstrucciones(proceso.getInstrucciones() - tiempoMaxEjecucion);
-            cola.agregar(proceso);
+        if (proceso != null) {
+            System.out.println("Seleccionado proceso " + proceso.getNombre() + " con política FCFS.");
         }
         return proceso;
     }
 
+    private Proceso siguienteProcesoRoundRobin() {
+    Proceso proceso = cola.poll();
+    if (proceso != null && proceso.getInstrucciones() > tiempoMaxEjecucion) {
+        proceso.setInstrucciones(proceso.getInstrucciones() - tiempoMaxEjecucion); // Usa setInstrucciones
+        cola.agregar(proceso);
+        System.out.println("Proceso " + proceso.getNombre() + " devuelto a la cola con política RoundRobin.");
+    }
+    return proceso;
+}
+
     private Proceso siguienteProcesoSPN() {
         Proceso procesoMenorInstrucciones = null;
 
-        for (int i = 0; i < cola.cantidad(); i++) {
+        for (int i = 0; i < cola.getSize(); i++) {
             Proceso proceso = cola.poll();
             if (procesoMenorInstrucciones == null || proceso.getInstrucciones() < procesoMenorInstrucciones.getInstrucciones()) {
                 if (procesoMenorInstrucciones != null) {
@@ -142,12 +157,15 @@ public class Planificador {
                 cola.agregar(proceso);
             }
         }
+        if (procesoMenorInstrucciones != null) {
+            System.out.println("Seleccionado proceso " + procesoMenorInstrucciones.getNombre() + " con política SPN.");
+        }
         return procesoMenorInstrucciones;
     }
 
     private Proceso siguienteProcesoSRT() {
         Proceso procesoMenorInstruccionesRestantes = null;
-        for (int i = 0; i < cola.cantidad(); i++) {
+        for (int i = 0; i < cola.getSize(); i++) {
             Proceso proceso = cola.poll();
             if (procesoMenorInstruccionesRestantes == null || proceso.getInstrucciones() < procesoMenorInstruccionesRestantes.getInstrucciones()) {
                 if (procesoMenorInstruccionesRestantes != null) {
@@ -157,6 +175,9 @@ public class Planificador {
             } else {
                 cola.agregar(proceso);
             }
+        }
+        if (procesoMenorInstruccionesRestantes != null) {
+            System.out.println("Seleccionado proceso " + procesoMenorInstruccionesRestantes.getNombre() + " con política SRT.");
         }
         return procesoMenorInstruccionesRestantes;
     }
@@ -173,6 +194,9 @@ public class Planificador {
                 procesoMayorResponseRatio = proceso;
             }
         }
+        if (procesoMayorResponseRatio != null) {
+            System.out.println("Seleccionado proceso " + procesoMayorResponseRatio.getNombre() + " con política HRRN.");
+        }
         return procesoMayorResponseRatio;
     }
 
@@ -181,6 +205,7 @@ public class Planificador {
         Proceso[] procesosEnCola = cola.getProcesos(); // Obtener todos los procesos en la cola
         for (Proceso proceso : procesosEnCola) {
             proceso.incrementarTiempoEspera(); // Incrementar el tiempo de espera de cada proceso
+            System.out.println("Tiempo de espera incrementado para el proceso " + proceso.getNombre());
         }
     }
 }
