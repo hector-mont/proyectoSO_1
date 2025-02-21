@@ -10,14 +10,15 @@ public class Proceso extends Thread {
     private boolean cpuBound;
     private int ciclosExcepcion;
     private int ciclosCompletarExcepcion;
-    private String estado;
+    private volatile String estado;
     private int ciclosEjecutados;
-    private int tiempoEspera; // Tiempo de espera del proceso
+    private int tiempoEspera;
     private Semaphore semaforoExcepcion;
-    private int programCounter; // Program Counter (PC)
-    private int mar; // Memory Address Register (MAR)
+    private int programCounter;
+    private int mar;
+    private Planificador planificador;
 
-    public Proceso(int id, String nombre, int instrucciones, boolean cpuBound, int ciclosExcepcion, int ciclosCompletarExcepcion) {
+    public Proceso(int id, String nombre, int instrucciones, boolean cpuBound, int ciclosExcepcion, int ciclosCompletarExcepcion, Planificador planificador) {
         this.id = id;
         this.nombre = nombre;
         this.instrucciones = instrucciones;
@@ -30,6 +31,7 @@ public class Proceso extends Thread {
         this.semaforoExcepcion = new Semaphore(1);
         this.programCounter = 0;
         this.mar = 0;
+        this.planificador = planificador;
     }
 
     @Override
@@ -42,70 +44,70 @@ public class Proceso extends Thread {
                 programCounter++;
                 mar++;
 
-                // Verificar si el proceso es I/O bound y genera una excepción
                 if (!cpuBound && ciclosExcepcion > 0 && ciclosEjecutados % ciclosExcepcion == 0) {
-                    try {
-                        semaforoExcepcion.acquire();
-                        estado = "Blocked"; // Cambiar el estado a "Blocked"
-                        System.out.println(nombre + " generó una excepción de E/S.");
-                        Thread.sleep(ciclosCompletarExcepcion * 1000); // Simular el tiempo de la excepción
-                        estado = "Ready"; // Cambiar el estado a "Ready" después de completar la excepción
-                        System.out.println(nombre + " ha completado la excepción de E/S.");
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        System.err.println("Proceso interrumpido: " + e.getMessage());
-                    } finally {
-                        semaforoExcepcion.release();
-                    }
+                    manejarExcepcionIO();
                 }
 
                 try {
-                    Thread.sleep(1000); // Simular un ciclo de reloj
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    System.err.println("Proceso interrumpido: " + e.getMessage());
+                    return;
                 }
             } else {
-                try {
-                    Thread.sleep(1000); // Esperar si el proceso no está en estado "Running"
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    System.err.println("Proceso interrumpido: " + e.getMessage());
-                }
+                esperarCambioEstado();
             }
         }
-        estado = "Terminated";
+        setEstado("Terminated");
         System.out.println(nombre + " ha terminado.");
     }
 
-    // Método para incrementar el tiempo de espera
+    private void manejarExcepcionIO() {
+        try {
+            semaforoExcepcion.acquire();
+            setEstado("Blocked");
+            System.out.println(nombre + " generó una excepción de E/S.");
+            planificador.moverABloqueados(this);
+
+            Thread.sleep(ciclosCompletarExcepcion * 1000);
+
+            setEstado("Ready");
+            planificador.agregarProceso(this);
+            System.out.println(nombre + " ha completado la excepción de E/S.");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Proceso interrumpido: " + e.getMessage());
+        } finally {
+            semaforoExcepcion.release();
+        }
+    }
+
+    private void esperarCambioEstado() {
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
     public void incrementarTiempoEspera() {
         this.tiempoEspera++;
     }
 
-    // Método para obtener el tiempo de espera
     public int getTiempoEspera() {
         return tiempoEspera;
     }
 
-    // Método para verificar si el proceso ha terminado
     public boolean haTerminado() {
         return instrucciones == 0;
     }
 
-    // Método para establecer las instrucciones restantes
     public void setInstrucciones(int instrucciones) {
         this.instrucciones = instrucciones;
     }
 
-    // Getters y Setters
-    @Override
-    public long getId() {
-        return id; // Sobrescribe el método de Thread
-    }
-
     public int getProcesoId() {
-        return id; // Método adicional para obtener el id como int
+        return id;
     }
 
     public String getNombre() {
@@ -128,11 +130,11 @@ public class Proceso extends Thread {
         return ciclosCompletarExcepcion;
     }
 
-    public String getEstado() {
+    public synchronized String getEstado() {
         return estado;
     }
 
-    public void setEstado(String estado) {
+    public synchronized void setEstado(String estado) {
         this.estado = estado;
     }
 
