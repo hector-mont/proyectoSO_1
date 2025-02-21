@@ -67,8 +67,12 @@ public class Controlador {
     }
 
     public void detenerSimulacion() {
-        gui.actualizarLog("Simulación detenida.");
+    // Lógica para detener la simulación
+    for (CPU cpu : cpus) {
+        cpu.detener(); // Asegúrate de que la clase CPU tenga un método para detener la ejecución
     }
+    gui.actualizarLog("Simulación detenida.");
+}
 
     public void guardarConfiguracion() {
         String[] configuracion = {
