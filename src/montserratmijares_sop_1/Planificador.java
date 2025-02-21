@@ -214,6 +214,11 @@ public class Planificador {
     public Proceso[] getColaListos() {
         return cola.getProcesos();
     }
+    
+    public int getNumDeProcesos() {
+        return cola.getSize(); // Devuelve el tamaño de la cola de listos
+    }
+
 
     public Proceso[] getColaBloqueados() {
         return colaBloqueados.getProcesos();

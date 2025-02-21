@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package montserratmijares_sop_1;
 
 import javax.swing.*;
@@ -107,20 +103,22 @@ public class SimuladorGUI extends JFrame {
         logArea.setEditable(false);
         add(new JScrollPane(logArea), BorderLayout.SOUTH);
 
-        // Listeners
+        // Listeners para los botones
         iniciarSimulacionButton.addActionListener(e -> {
+            System.out.println("Botón de iniciar simulación presionado");
             if (controlador != null) {
                 controlador.iniciarSimulacion();
             } else {
-                System.err.println("Controlador no inicializado.");
+                logArea.append("Error: Controlador no inicializado.\n");
             }
         });
 
         detenerSimulacionButton.addActionListener(e -> {
+            
             if (controlador != null) {
                 controlador.detenerSimulacion();
             } else {
-                System.err.println("Controlador no inicializado.");
+                logArea.append("Error: Controlador no inicializado.\n");
             }
         });
 
@@ -128,7 +126,7 @@ public class SimuladorGUI extends JFrame {
             if (controlador != null) {
                 controlador.guardarConfiguracion();
             } else {
-                System.err.println("Controlador no inicializado.");
+                logArea.append("Error: Controlador no inicializado.\n");
             }
         });
 
@@ -136,7 +134,7 @@ public class SimuladorGUI extends JFrame {
             if (controlador != null) {
                 controlador.cargarConfiguracion();
             } else {
-                System.err.println("Controlador no inicializado.");
+                logArea.append("Error: Controlador no inicializado.\n");
             }
         });
     }
@@ -213,6 +211,5 @@ public class SimuladorGUI extends JFrame {
         this.controlador = controlador;
     }
 }
-
 
 

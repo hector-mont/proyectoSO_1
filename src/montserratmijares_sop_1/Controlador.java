@@ -22,6 +22,10 @@ public class Controlador {
         Timer timer = new Timer(1000, e -> actualizarInterfaz());
         timer.start();
     }
+    
+    public void setGui(SimuladorGUI gui) {
+        this.gui = gui;
+    }
 
     public void iniciarSimulacion() {
         // Obtener los valores de la interfaz
@@ -33,9 +37,10 @@ public class Controlador {
         String ciclosCompletarExcepcion = gui.getCiclosCompletarExcepcion();
 
         // Crear un nuevo proceso con los parámetros ingresados
-        Proceso proceso = new Proceso(1, "Proceso1", Integer.parseInt(numInstrucciones),
-                tipoProceso.equals("CPU Bound"), Integer.parseInt(ciclosExcepcion),
-                Integer.parseInt(ciclosCompletarExcepcion), planificador);
+        int procesoId = planificador.getNumDeProcesos(); // Suponiendo que tienes un método para contar procesos
+        Proceso proceso = new Proceso(procesoId, "Proceso" + procesoId, Integer.parseInt(numInstrucciones),
+            tipoProceso.equals("CPU Bound"), Integer.parseInt(ciclosExcepcion),
+            Integer.parseInt(ciclosCompletarExcepcion), planificador);
 
         // Agregar el proceso al planificador
         planificador.agregarProceso(proceso);
