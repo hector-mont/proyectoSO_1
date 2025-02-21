@@ -35,15 +35,26 @@ public class Controlador {
         String tipoProceso = gui.getTipoProceso();
         String ciclosExcepcion = gui.getCiclosExcepcion();
         String ciclosCompletarExcepcion = gui.getCiclosCompletarExcepcion();
+        String numProcesosStr = gui.getNumProcesos(); // Obtener el número de procesos
+
+        int numProcesos;
+     try {
+        numProcesos = Integer.parseInt(numProcesosStr); // Convertir a entero
+    } catch (NumberFormatException e) {
+        gui.actualizarLog("Error: El número de procesos debe ser un número entero.");
+        return; // Salir si hay un error
+    }
 
         // Crear un nuevo proceso con los parámetros ingresados
-        int procesoId = planificador.getNumDeProcesos(); // Suponiendo que tienes un método para contar procesos
+        for (int i = 0; i < numProcesos; i++) {
+        int procesoId = planificador.getNumDeProcesos(); // Obtener el ID del proceso
         Proceso proceso = new Proceso(procesoId, "Proceso" + procesoId, Integer.parseInt(numInstrucciones),
             tipoProceso.equals("CPU Bound"), Integer.parseInt(ciclosExcepcion),
             Integer.parseInt(ciclosCompletarExcepcion), planificador);
 
         // Agregar el proceso al planificador
         planificador.agregarProceso(proceso);
+    }
 
         // Iniciar la simulación
         gui.actualizarLog("Simulación iniciada con los siguientes parámetros:");

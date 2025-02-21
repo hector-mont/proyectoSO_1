@@ -10,6 +10,7 @@ public class SimuladorGUI extends JFrame {
     private JComboBox<String> algoritmoPlanificacionComboBox;
     private JTextField duracionCicloTextField;
     private JTextField numProcesadoresTextField;
+    private JTextField numProcesosTextField;
     private JTextField numInstruccionesTextField;
     private JComboBox<String> tipoProcesoComboBox;
     private JTextField ciclosExcepcionTextField;
@@ -38,6 +39,10 @@ public class SimuladorGUI extends JFrame {
         controlPanel.add(new JLabel("Duración del Ciclo (ms):"));
         duracionCicloTextField = new JTextField();
         controlPanel.add(duracionCicloTextField);
+        
+        controlPanel.add(new JLabel("Número de Procesos:"));
+        numProcesosTextField = new JTextField(); // Campo para el número de procesos
+        controlPanel.add(numProcesosTextField);
 
         // Número de procesadores
         controlPanel.add(new JLabel("Número de Procesadores:"));
@@ -140,6 +145,10 @@ public class SimuladorGUI extends JFrame {
     }
 
     // Métodos para obtener los valores de los campos
+    
+    public String getNumProcesos() {
+        return numProcesosTextField.getText(); // Asegúrate de que este campo esté definido
+    }
     public String getDuracionCiclo() {
         return duracionCicloTextField.getText();
     }
